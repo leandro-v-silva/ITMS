@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Presentation — edit me</title>
+<style>
+  /* ===== Theme: tweak these variables to re-skin the whole deck ===== */
+  :root {
+    --bg:        #0f172a;
+    --bg2:       #111c33;
+    --text:      #e2e8f0;
+    --muted:     #94a3b8;
+    --accent:    #6366f1;
+    --accent-2:  #22d3ee;
+    --slide-max: 1100px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body { height: 100%; }
+
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: linear-gradient(135deg, var(--bg), var(--bg2));
+    color: var(--text);
+    overflow: hidden;
+  }
+
+  /* ===== Slides ===== */
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    padding: 7vh 8vw;
+  }
+  .slide.active { display: flex; animation: fade-in .35s ease; }
+
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .slide > * { max-width: var(--slide-max); }
+
+  h1 { font-size: clamp(2.4rem, 6vw, 4.5rem); line-height: 1.1; letter-spacing: -0.02em; }
+  h2 { font-size: clamp(1.8rem, 4.5vw, 3rem); line-height: 1.15; margin-bottom: 1.2em; }
+  h2::after {
+    content: "";
+    display: block;
+    width: 72px; height: 5px;
+    margin-top: 14px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  }
+  p, li { font-size: clamp(1.05rem, 2vw, 1.5rem); line-height: 1.55; color: var(--text); }
+  p + p { margin-top: .8em; }
+  strong { color: var(--accent-2); }
+
+  ul, ol { padding-left: 1.3em; display: grid; gap: .55em; }
+  ul { list-style: none; }
+  ul li::before { content: "▸"; color: var(--accent); margin-right: .5em; }
+  ol li::marker { color: var(--accent); font-weight: 700; }
+
+  code {
+    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+    background: rgba(99, 102, 241, .15);
+    color: var(--accent-2);
+    padding: .1em .4em;
+    border-radius: 6px;
+    font-size: .9em;
+  }
+  pre {
+    background: rgba(2, 6, 23, .7);
+    border: 1px solid rgba(148, 163, 184, .2);
+    border-radius: 12px;
+    padding: 1em 1.2em;
+    overflow: auto;
+  }
+  pre code { background: none; padding: 0; font-size: .85em; line-height: 1.5; }
+
+  blockquote {
+    border-left: 4px solid var(--accent);
+    padding-left: 1em;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  /* ===== Layout variants ===== */
+  .slide.title, .slide.section, .slide.end { align-items: center; text-align: center; }
+  .slide.title h1, .slide.section h2, .slide.end h1 {
+    background: linear-gradient(90deg, var(--text), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .slide.title .subtitle { margin-top: .8em; font-size: clamp(1.1rem, 2.4vw, 1.6rem); color: var(--muted); }
+  .slide.title .meta { margin-top: 2.5em; font-size: .95rem; color: var(--muted); }
+  .slide.section { background: radial-gradient(circle at 50% 50%, rgba(99,102,241,.12), transparent 60%); }
+
+  .columns { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5em; align-items: start; width: 100%; }
+
+  /* ===== Speaker notes (press N) ===== */
+  .notes { display: none; }
+  body.show-notes .slide.active .notes {
+    display: block;
+    position: fixed;
+    left: 50%; bottom: 74px;
+    transform: translateX(-50%);
+    width: min(760px, 90vw);
+    background: rgba(2, 6, 23, .92);
+    border: 1px solid var(--accent);
+    border-radius: 12px;
+    padding: .9em 1.2em;
+    font-size: .95rem;
+    color: var(--muted);
+    z-index: 20;
+  }
+  .notes::before { content: "🗒 Speaker notes — "; color: var(--accent); font-weight: 600; }
+
+  /* ===== UI chrome ===== */
+  #progress {
+    position: fixed; top: 0; left: 0;
+    height: 4px; width: 0;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    transition: width .3s ease;
+    z-index: 10;
+  }
+
+  #controls {
+    position: fixed; bottom: 18px; right: 22px;
+    display: flex; align-items: center; gap: 10px;
+    z-index: 10;
+    user-select: none;
+  }
+  #controls button {
+    background: rgba(148, 163, 184, .12);
+    color: var(--text);
+    border: 1px solid rgba(148, 163, 184, .25);
+    border-radius: 10px;
+    font-size: 1.1rem;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  #controls button:hover { background: rgba(99, 102, 241, .35); }
+  #counter { font-variant-numeric: tabular-nums; color: var(--muted); min-width: 58px; text-align: center; }
+
+  #extras {
+    position: fixed; bottom: 18px; left: 22px;
+    display: flex; gap: 10px;
+    z-index: 10;
+  }
+  #extras button {
+    background: none;
+    color: var(--muted);
+    border: 1px solid rgba(148, 163, 184, .25);
+    border-radius: 10px;
+    font-size: .85rem;
+    padding: 7px 12px;
+    cursor: pointer;
+  }
+  #extras button:hover { color: var(--text); border-color: var(--accent); }
+
+  #hint {
+    position: fixed; bottom: 60px; left: 50%;
+    transform: translateX(-50%);
+    color: var(--muted); font-size: .85rem;
+    opacity: .7; z-index: 10; pointer-events: none;
+    transition: opacity 1s;
+  }
+
+  /* ===== Print / PDF export: each slide on its own page ===== */
+  @media print {
+    body { overflow: visible; background: #fff; color: #000; }
+    .slide {
+      display: flex !important;
+      position: relative;
+      page-break-after: always;
+      min-height: 100vh;
+    }
+    .slide h1, .slide.section h2, .slide.end h1 { color: #000; background: none; -webkit-background-clip: unset; }
+    p, li { color: #000; }
+    #controls, #extras, #progress, #hint, .notes { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<main id="deck">
+
+  <!-- 1 · TITLE SLIDE -->
+  <section class="slide title">
+    <h1>My Awesome Presentation</h1>
+    <p class="subtitle">A PowerPoint-style deck that lives in a single HTML file</p>
+    <p class="meta">Your Name · October 2026</p>
+    <aside class="notes">Welcome everyone! This template is fully keyboard-driven. Press → to move on.</aside>
+  </section>
+
+  <!-- 2 · CONTENT SLIDE -->
+  <section class="slide">
+    <h2>Why a HTML deck?</h2>
+    <ul>
+      <li>No software to install — runs in any browser</li>
+      <li>Version-controlled: slides are just code</li>
+      <li>Easy to theme with CSS variables</li>
+      <li>Host it free on <strong>GitHub Pages</strong></li>
+    </ul>
+    <aside class="notes">Emphasize the GitHub Pages point — that's the free hosting story.</aside>
+  </section>
+
+  <!-- 3 · SECTION DIVIDER -->
+  <section class="slide section">
+    <h2>Part One</h2>
+    <p>Use this layout between major topics</p>
+  </section>
+
+  <!-- 4 · TWO COLUMNS -->
+  <section class="slide">
+    <h2>Two-column layout</h2>
+    <div class="columns">
+      <div>
+        <p>Wrap content in a <code>.columns</code> div to get two side-by-side columns. Great for comparing ideas.</p>
+      </div>
+      <div>
+        <ol>
+          <li>Copy an existing slide</li>
+          <li>Edit the content</li>
+          <li>Done — no build step</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · CODE SLIDE -->
+  <section class="slide">
+    <h2>Code slide</h2>
+    <pre><code>// Adding a slide = adding a section
+&lt;section class="slide"&gt;
+  &lt;h2&gt;Hello&lt;/h2&gt;
+  &lt;p&gt;Your content here&lt;/p&gt;
+&lt;/section&gt;</code></pre>
+    <p style="margin-top: 1em;">Syntax highlighting? Drop in <a href="https://highlightjs.org" style="color: var(--accent-2);">highlight.js</a> if you want it.</p>
+  </section>
+
+  <!-- 6 · QUOTE SLIDE -->
+  <section class="slide">
+    <h2>Quote</h2>
+    <blockquote>
+      “The best presentations are the ones you can edit in a text editor.”
+    </blockquote>
+    <p style="margin-top: 1em; color: var(--muted);">— Anonymous, probably</p>
+  </section>
+
+  <!-- 7 · CLOSING SLIDE -->
+  <section class="slide end">
+    <h1>Thank you!</h1>
+    <p class="subtitle" style="margin-top: .8em;">Questions?</p>
+  </section>
+
+</main>
+
+<div id="hint">← → navigate · F fullscreen · N notes</div>
+
+<div id="extras">
+  <button id="btn-notes" title="Toggle speaker notes (N)">🗒 Notes</button>
+  <button id="btn-full" title="Toggle fullscreen (F)">⛶ Fullscreen</button>
+</div>
+
+<div id="controls">
+  <button id="btn-prev" title="Previous (←)">‹</button>
+  <span id="counter">1 / 7</span>
+  <button id="btn-next" title="Next (→)">›</button>
+</div>
+
+<script>
+  const slides  = [...document.querySelectorAll(".slide")];
+  const counter = document.getElementById("counter");
+  const progress = document.getElementById("progress");
+  const hint = document.getElementById("hint");
+  let current = 0;
+
+  // Open at the slide saved in the URL hash (#3), if present
+  const fromHash = parseInt(location.hash.slice(1), 10);
+  if (fromHash >= 1 && fromHash <= slides.length) current = fromHash - 1;
+
+  function show(i) {
+    current = Math.max(0, Math.min(i, slides.length - 1));
+    slides.forEach((s, idx) => s.classList.toggle("active", idx === current));
+    counter.textContent = `${current + 1} / ${slides.length}`;
+    progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+    history.replaceState(null, "", `#${current + 1}`);
+    hint.style.opacity = 0; // hint fades after the first navigation
+  }
+
+  const next = () => show(current + 1);
+  const prev = () => show(current - 1);
+
+  document.getElementById("btn-next").addEventListener("click", next);
+  document.getElementById("btn-prev").addEventListener("click", prev);
+
+  function toggleFullscreen() {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen();
+  }
+  document.getElementById("btn-full").addEventListener("click", toggleFullscreen);
+  document.getElementById("btn-notes").addEventListener("click", () =>
+    document.body.classList.toggle("show-notes"));
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === " " || e.key === "PageDown") { e.preventDefault(); next(); }
+    else if (e.key === "ArrowLeft" || e.key === "ArrowUp" || e.key === "PageUp") { e.preventDefault(); prev(); }
+    else if (e.key === "Home") show(0);
+    else if (e.key === "End") show(slides.length - 1);
+    else if (e.key === "f" || e.key === "F") toggleFullscreen();
+    else if (e.key === "n" || e.key === "N") document.body.classList.toggle("show-notes");
+  });
+
+  // Swipe support for touch screens
+  let touchX = null;
+  document.addEventListener("touchstart", e => touchX = e.touches[0].clientX);
+  document.addEventListener("touchend", e => {
+    if (touchX === null) return;
+    const dx = e.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 50) (dx < 0 ? next : prev)();
+    touchX = null;
+  });
+
+  window.addEventListener("hashchange", () => {
+    const n = parseInt(location.hash.slice(1), 10);
+    if (n >= 1 && n <= slides.length && n - 1 !== current) show(n - 1);
+  });
+
+  show(current);
+</script>
+</body>
+</html>
