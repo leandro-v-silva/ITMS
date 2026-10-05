@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ITSM Incident Analytics — BI Report</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="report-header">
+    <div>
+      <h1>ITSM Incident Analytics</h1>
+      <p class="subtitle">
+        IT Service Management tickets · source:
+        <a href="https://www.kaggle.com/datasets/ahanwadi/itsm-data" target="_blank" rel="noopener">Kaggle — ahanwadi/itsm-data</a>
+      </p>
+    </div>
+    <span id="generated-at"></span>
+  </header>
+
+  <div id="loading">Loading data…</div>
+  <div id="error-banner"></div>
+
+  <!-- KPI strip -->
+  <section class="kpis" id="kpis"></section>
+
+  <!-- Charts -->
+  <section class="grid">
+    <div class="card span-12">
+      <h3>Ticket volume over time</h3>
+      <p class="description">Tickets opened vs resolved per month</p>
+      <div id="chart-monthly"></div>
+    </div>
+
+    <div class="card">
+      <h3>Priority mix</h3>
+      <p class="description">All tickets by assigned priority</p>
+      <div id="chart-priority"></div>
+    </div>
+
+    <div class="card">
+      <h3>Ticket type</h3>
+      <p class="description">Category of the service record</p>
+      <div id="chart-category"></div>
+    </div>
+
+    <div class="card">
+      <h3>Affected CI category</h3>
+      <p class="description">Configuration item category impacted</p>
+      <div id="chart-ci-cat"></div>
+    </div>
+
+    <div class="card">
+      <h3>Top 10 CI subcategories</h3>
+      <p class="description">Where incidents concentrate</p>
+      <div id="chart-ci-subcat"></div>
+    </div>
+
+    <div class="card">
+      <h3>Closure codes</h3>
+      <p class="description">How tickets were closed</p>
+      <div id="chart-closure"></div>
+    </div>
+
+    <div class="card span-12">
+      <h3>Resolution time by priority</h3>
+      <p class="description">Median and 90th-percentile days-to-resolve (resolved tickets only)</p>
+      <div id="chart-resolution"></div>
+    </div>
+  </section>
+
+  <footer class="notes">
+    <strong>Methodology & data quality notes</strong>
+    <ul>
+      <li>ETL in Python/pandas: two day-first date formats normalised (<code>D/M/YYYY</code> and <code>DD-MM-YYYY</code>); durations recomputed from timestamps (the raw <code>Handle_Time_hrs</code> column is unreliable).</li>
+      <li>SLA targets are a documented assumption: P1 ≤ 1d, P2 ≤ 3d, P3 ≤ 7d, P4/P5 ≤ 14d.</li>
+      <li>Resolution timestamps only exist from Oct 2013 onward, so earlier months show zero resolutions — an artifact of the source extract, not of the pipeline.</li>
+      <li>Pipeline & CI/CD: <code>etl/</code> → GitHub Actions → this report (D3.js) on GitHub Pages.</li>
+    </ul>
+  </footer>
+
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script src="vendor/d3.v7.min.js"></script>
+<script src="charts.js"></script>
+</body>
+</html>

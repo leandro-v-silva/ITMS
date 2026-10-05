@@ -1,0 +1,140 @@
+[
+  {
+    "month": "2012-02",
+    "opened": 1,
+    "resolved": 0,
+    "partial": false
+  },
+  {
+    "month": "2012-03",
+    "opened": 2,
+    "resolved": 0,
+    "partial": false
+  },
+  {
+    "month": "2012-07",
+    "opened": 1,
+    "resolved": 0,
+    "partial": false
+  },
+  {
+    "month": "2012-08",
+    "opened": 5,
+    "resolved": 0,
+    "partial": false
+  },
+  {
+    "month": "2012-09",
+    "opened": 2,
+    "resolved": 0,
+    "partial": false
+  },
+  {
+    "month": "2012-10",
+    "opened": 5,
+    "resolved": 0,
+    "partial": false
+  },
+  {
+    "month": "2012-11",
+    "opened": 1,
+    "resolved": 0,
+    "partial": false
+  },
+  {
+    "month": "2012-12",
+    "opened": 4,
+    "resolved": 0,
+    "partial": false
+  },
+  {
+    "month": "2013-01",
+    "opened": 5,
+    "resolved": 0,
+    "partial": false
+  },
+  {
+    "month": "2013-02",
+    "opened": 10,
+    "resolved": 0,
+    "partial": false
+  },
+  {
+    "month": "2013-03",
+    "opened": 9,
+    "resolved": 0,
+    "partial": false
+  },
+  {
+    "month": "2013-04",
+    "opened": 19,
+    "resolved": 0,
+    "partial": false
+  },
+  {
+    "month": "2013-05",
+    "opened": 27,
+    "resolved": 0,
+    "partial": false
+  },
+  {
+    "month": "2013-06",
+    "opened": 36,
+    "resolved": 0,
+    "partial": false
+  },
+  {
+    "month": "2013-07",
+    "opened": 73,
+    "resolved": 0,
+    "partial": false
+  },
+  {
+    "month": "2013-08",
+    "opened": 93,
+    "resolved": 0,
+    "partial": false
+  },
+  {
+    "month": "2013-09",
+    "opened": 857,
+    "resolved": 0,
+    "partial": false
+  },
+  {
+    "month": "2013-10",
+    "opened": 8606,
+    "resolved": 8267,
+    "partial": false
+  },
+  {
+    "month": "2013-11",
+    "opened": 8128,
+    "resolved": 7701,
+    "partial": false
+  },
+  {
+    "month": "2013-12",
+    "opened": 6743,
+    "resolved": 6689,
+    "partial": false
+  },
+  {
+    "month": "2014-01",
+    "opened": 8270,
+    "resolved": 7873,
+    "partial": false
+  },
+  {
+    "month": "2014-02",
+    "opened": 7377,
+    "resolved": 7273,
+    "partial": false
+  },
+  {
+    "month": "2014-03",
+    "opened": 6332,
+    "resolved": 7023,
+    "partial": false
+  }
+]

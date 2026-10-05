@@ -1,0 +1,42 @@
+[
+  {
+    "ci_subcat": "Server Based Application",
+    "count": 18811
+  },
+  {
+    "ci_subcat": "Web Based Application",
+    "count": 15311
+  },
+  {
+    "ci_subcat": "Desktop Application",
+    "count": 3876
+  },
+  {
+    "ci_subcat": "Laptop",
+    "count": 1921
+  },
+  {
+    "ci_subcat": "SAP",
+    "count": 1199
+  },
+  {
+    "ci_subcat": "Banking Device",
+    "count": 916
+  },
+  {
+    "ci_subcat": "Citrix",
+    "count": 767
+  },
+  {
+    "ci_subcat": "SAN",
+    "count": 549
+  },
+  {
+    "ci_subcat": "Client Based Application",
+    "count": 492
+  },
+  {
+    "ci_subcat": "Desktop",
+    "count": 423
+  }
+]

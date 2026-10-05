@@ -1,0 +1,9 @@
+{
+  "generated_at_utc": "2026-10-05T16:18:32+00:00",
+  "source": {
+    "name": "ITSM data (Kaggle)",
+    "url": "https://www.kaggle.com/datasets/ahanwadi/itsm-data",
+    "file": "ITSM_data.csv"
+  },
+  "rows_processed": 46606
+}

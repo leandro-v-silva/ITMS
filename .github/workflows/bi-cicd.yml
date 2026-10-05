@@ -1,0 +1,69 @@
+name: BI pipeline & report deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "etl/**"
+      - "data/**"
+      - "report/**"
+      - ".github/workflows/**"
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 1 * *" # monthly refresh attempt
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  etl:
+    name: Extract · Transform · Load
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r etl/requirements.txt
+
+      - name: Run ETL pipeline
+        run: python etl/pipeline.py
+
+      - name: Validate report data
+        run: |
+          python - <<'PY'
+          import json, glob, sys
+          files = sorted(glob.glob("report/data/*.json"))
+          assert len(files) >= 9, f"expected >=9 JSON files, found {len(files)}"
+          for f in files:
+              with open(f) as fh:
+                  payload = json.load(fh)
+              assert payload not in (None, [], {}), f"{f} is empty"
+          print(f"JSON validation OK: {len(files)} files")
+          PY
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: report/
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: etl
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

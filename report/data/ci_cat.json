@@ -1,0 +1,54 @@
+[
+  {
+    "ci_cat": "application",
+    "count": 32900
+  },
+  {
+    "ci_cat": "subapplication",
+    "count": 7782
+  },
+  {
+    "ci_cat": "computer",
+    "count": 3643
+  },
+  {
+    "ci_cat": "storage",
+    "count": 703
+  },
+  {
+    "ci_cat": "hardware",
+    "count": 442
+  },
+  {
+    "ci_cat": "software",
+    "count": 333
+  },
+  {
+    "ci_cat": "database",
+    "count": 214
+  },
+  {
+    "ci_cat": "displaydevice",
+    "count": 212
+  },
+  {
+    "ci_cat": "officeelectronics",
+    "count": 152
+  },
+  {
+    "ci_cat": "Unknown",
+    "count": 111
+  },
+  {
+    "ci_cat": "networkcomponents",
+    "count": 107
+  },
+  {
+    "ci_cat": "applicationcomponent",
+    "count": 5
+  },
+  {
+    "ci_cat": "Phone",
+    "count": 2
+  }
+]

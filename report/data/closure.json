@@ -1,0 +1,58 @@
+[
+  {
+    "closure_code": "Other",
+    "count": 16470
+  },
+  {
+    "closure_code": "Software",
+    "count": 13027
+  },
+  {
+    "closure_code": "User error",
+    "count": 3554
+  },
+  {
+    "closure_code": "No error - works as designed",
+    "count": 3530
+  },
+  {
+    "closure_code": "Hardware",
+    "count": 2999
+  },
+  {
+    "closure_code": "Data",
+    "count": 2209
+  },
+  {
+    "closure_code": "Unknown",
+    "count": 2050
+  },
+  {
+    "closure_code": "Operator error",
+    "count": 1539
+  },
+  {
+    "closure_code": "User manual not used",
+    "count": 765
+  },
+  {
+    "closure_code": "Inquiry",
+    "count": 162
+  },
+  {
+    "closure_code": "Referred",
+    "count": 158
+  },
+  {
+    "closure_code": "Questions",
+    "count": 132
+  },
+  {
+    "closure_code": "Kwaliteit van de output",
+    "count": 10
+  },
+  {
+    "closure_code": "Overig",
+    "count": 1
+  }
+]

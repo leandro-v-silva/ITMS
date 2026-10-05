@@ -1,0 +1,16 @@
+{
+  "total_incidents": 46606,
+  "closed": 46597,
+  "work_in_progress": 9,
+  "reopened": 2284,
+  "reopen_rate_pct": 4.9,
+  "median_resolution_days": 0.78,
+  "avg_resolution_days": 5.19,
+  "p90_resolution_days": 10.98,
+  "avg_reassignments": 1.13,
+  "within_sla_pct": 91.87,
+  "date_range": {
+    "min": "2012-02-05",
+    "max": "2014-03-31"
+  }
+}

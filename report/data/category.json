@@ -1,0 +1,18 @@
+[
+  {
+    "category": "incident",
+    "count": 37748
+  },
+  {
+    "category": "request for information",
+    "count": 8846
+  },
+  {
+    "category": "complaint",
+    "count": 11
+  },
+  {
+    "category": "request for change",
+    "count": 1
+  }
+]

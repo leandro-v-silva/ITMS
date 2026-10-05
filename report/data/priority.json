@@ -1,0 +1,26 @@
+[
+  {
+    "priority": "P1 \u00b7 Critical",
+    "count": 3
+  },
+  {
+    "priority": "P2 \u00b7 High",
+    "count": 697
+  },
+  {
+    "priority": "P3 \u00b7 Medium",
+    "count": 5323
+  },
+  {
+    "priority": "P4 \u00b7 Low",
+    "count": 22717
+  },
+  {
+    "priority": "P5 \u00b7 Very low",
+    "count": 16486
+  },
+  {
+    "priority": "Unknown",
+    "count": 1380
+  }
+]

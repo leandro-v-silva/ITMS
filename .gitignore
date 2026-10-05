@@ -1,2 +1,11 @@
 .DS_Store
 Thumbs.db
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# data/raw/ITSM_data.csv is deliberately committed so CI runs without
+# Kaggle credentials. Uncomment the next line if you prefer to fetch it.
+# data/raw/

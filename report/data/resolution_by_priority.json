@@ -1,0 +1,44 @@
+[
+  {
+    "Priority_Label": "P1 \u00b7 Critical",
+    "median": 2.11,
+    "avg": 3.42,
+    "p90": 5.3,
+    "n": 3
+  },
+  {
+    "Priority_Label": "P2 \u00b7 High",
+    "median": 0.14,
+    "avg": 0.83,
+    "p90": 2.69,
+    "n": 413
+  },
+  {
+    "Priority_Label": "P3 \u00b7 Medium",
+    "median": 0.16,
+    "avg": 3.88,
+    "p90": 6.88,
+    "n": 4811
+  },
+  {
+    "Priority_Label": "P4 \u00b7 Low",
+    "median": 0.63,
+    "avg": 5.29,
+    "p90": 9.93,
+    "n": 22154
+  },
+  {
+    "Priority_Label": "P5 \u00b7 Very low",
+    "median": 1.23,
+    "avg": 5.64,
+    "p90": 13.72,
+    "n": 16201
+  },
+  {
+    "Priority_Label": "Unknown",
+    "median": 0.14,
+    "avg": 4.19,
+    "p90": 6.95,
+    "n": 1244
+  }
+]
