@@ -40,6 +40,9 @@ cd report && python3 -m http.server 8000
 # open http://localhost:8000      (a server is needed: the report fetches JSON)
 ```
 
+The report is **bilingual (EN ⇄ PT-BR)**: use the EN/PT switch in the header —
+the choice is remembered in `localStorage`. All strings live in `report/i18n.js`.
+
 ## CI/CD
 
 The workflow `.github/workflows/bi-cicd.yml` runs on every push to `main` (when ETL/data/report

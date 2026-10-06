@@ -1,7 +1,12 @@
 /* ITSM BI report — D3.js visualizations.
-   Loads the JSON aggregates produced by etl/pipeline.py and renders the report. */
+   Loads the JSON aggregates produced by etl/pipeline.py and renders the report.
+   Bilingual (EN/PT): strings come from i18n.js via t(); charts re-render on toggle. */
 (async function () {
   "use strict";
+
+  const LS_KEY = "report-lang";
+  const state = { lang: localStorage.getItem(LS_KEY) === "pt" ? "pt" : "en" };
+  const t = (key) => (I18N[state.lang] && I18N[state.lang][key]) || I18N.en[key] || key;
 
   const COLORS = {
     opened: "#2563eb",
@@ -13,7 +18,7 @@
     barAlt: "#93c5fd",
   };
 
-  const fmtInt = d3.format(",");
+  const fmtInt = (n) => Number(n).toLocaleString(state.lang === "pt" ? "pt-BR" : "en-US");
   const fmt1 = d3.format(".1f");
   const tooltip = d3.select("#tooltip");
 
@@ -27,9 +32,17 @@
   function showError(err) {
     console.error(err);
     const banner = document.getElementById("error-banner");
-    banner.textContent = "Failed to load report data. Run the ETL first (see README): " + err;
+    banner.textContent = t("ui.error_prefix") + err;
     banner.style.display = "block";
     document.getElementById("loading").style.display = "none";
+  }
+
+  function applyStaticText() {
+    document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
+    document.querySelectorAll("[data-i18n-html]").forEach((el) => { el.innerHTML = t(el.dataset.i18nHtml); });
+    document.documentElement.lang = state.lang === "pt" ? "pt-BR" : "en";
+    document.querySelectorAll("#lang-switch button").forEach((b) =>
+      b.classList.toggle("active", b.dataset.lang === state.lang));
   }
 
   // ---------- Load all datasets ----------
@@ -41,34 +54,42 @@
   } catch (err) { showError(err); return; }
 
   document.getElementById("loading").style.display = "none";
-  const generated = new Date(data.meta.generated_at_utc);
-  document.getElementById("generated-at").textContent =
-    "Pipeline run: " + generated.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+
+  function renderGenerated() {
+    const generated = new Date(data.meta.generated_at_utc);
+    const locale = state.lang === "pt" ? "pt-BR" : "en-US";
+    document.getElementById("generated-at").textContent =
+      t("header.generated") + " " + generated.toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" });
+  }
 
   // ---------- KPI strip ----------
-  (function renderKpis() {
+  function renderKpis() {
     const k = data.kpi;
     const closedPct = (k.closed / k.total_incidents) * 100;
     const cards = [
-      { label: "Total tickets", value: fmtInt(k.total_incidents), note: `${k.date_range.min} → ${k.date_range.max}` },
-      { label: "Closed", value: fmt1(closedPct) + "%", note: `${k.work_in_progress} work in progress` },
-      { label: "Reopen rate", value: fmt1(k.reopen_rate_pct) + "%", note: fmtInt(k.reopened) + " tickets reopened" },
-      { label: "Median resolution", value: fmt1(k.median_resolution_days) + " d", note: "p90: " + fmt1(k.p90_resolution_days) + " days" },
-      { label: "Avg reassignments", value: fmt1(k.avg_reassignments), note: "per ticket" },
-      { label: "Resolved within SLA", value: fmt1(k.within_sla_pct) + "%", note: "targets: see methodology", cls: "good" },
+      { label: t("kpi.total.label"), value: fmtInt(k.total_incidents),
+        note: t("kpi.total.note").replace("{min}", k.date_range.min).replace("{max}", k.date_range.max) },
+      { label: t("kpi.closed.label"), value: fmt1(closedPct) + "%",
+        note: t("kpi.closed.note").replace("{x}", fmtInt(k.work_in_progress)) },
+      { label: t("kpi.reopen.label"), value: fmt1(k.reopen_rate_pct) + "%",
+        note: t("kpi.reopen.note").replace("{x}", fmtInt(k.reopened)) },
+      { label: t("kpi.median.label"), value: fmt1(k.median_resolution_days) + " d",
+        note: t("kpi.median.note").replace("{x}", fmt1(k.p90_resolution_days)) },
+      { label: t("kpi.reassign.label"), value: fmt1(k.avg_reassignments), note: t("kpi.reassign.note") },
+      { label: t("kpi.sla.label"), value: fmt1(k.within_sla_pct) + "%", note: t("kpi.sla.note"), cls: "good" },
     ];
     d3.select("#kpis").selectAll(".kpi").data(cards).join("div").attr("class", "kpi").html((d) =>
       `<div class="label">${d.label}</div>
        <div class="value ${d.cls || ""}">${d.value}</div>
        <div class="note">${d.note}</div>`);
-  })();
+  }
 
   // ---------- Monthly volume: multi-line chart ----------
-  (function renderMonthly() {
+  function renderMonthly() {
     const el = "#chart-monthly";
     const W = 1080, H = 340, m = { top: 16, right: 30, bottom: 40, left: 56 };
     const svg = d3.select(el).append("svg")
-      .attr("viewBox", `0 0 ${W} ${H}`).attr("role", "img").attr("aria-label", "Monthly ticket volume");
+      .attr("viewBox", `0 0 ${W} ${H}`).attr("role", "img").attr("aria-label", t("charts.volume.title"));
 
     const rows = data.monthly;
     const x = d3.scalePoint().domain(rows.map((d) => d.month)).range([m.left, W - m.right]).padding(0.4);
@@ -95,8 +116,7 @@
     svg.append("path").datum(rows).attr("d", lineOpened).attr("fill", "none")
       .attr("stroke", COLORS.opened).attr("stroke-width", 2.5);
     svg.append("path").datum(rows).attr("d", lineResolved).attr("fill", "none")
-      .attr("stroke", COLORS.resolved).attr("stroke-width", 2.5)
-      .attr("stroke-dasharray", rows.some((d) => d.partial) ? "none" : "none");
+      .attr("stroke", COLORS.resolved).attr("stroke-width", 2.5);
 
     const focus = svg.append("g").style("display", "none");
     focus.append("circle").attr("r", 5).attr("fill", COLORS.opened);
@@ -116,20 +136,19 @@
           .join("circle")
           .attr("cx", x(d.month)).attr("cy", (dd) => dd);
         showTooltip(event,
-          `<strong>${d.month}${d.partial ? " (partial)" : ""}</strong><br>` +
-          `Opened: ${fmtInt(d.opened)}<br>Resolved: ${fmtInt(d.resolved)}`);
+          `<strong>${d.month}${d.partial ? " " + t("tooltip.partial") : ""}</strong><br>` +
+          `${t("tooltip.opened")} ${fmtInt(d.opened)}<br>${t("tooltip.resolved")} ${fmtInt(d.resolved)}`);
       })
       .on("mouseleave", () => { focus.style("display", "none"); hideTooltip(); });
 
-    // Legend
     const legend = svg.append("g").attr("class", "legend")
       .attr("transform", `translate(${W - m.right - 190}, ${m.top})`);
-    [["Opened", COLORS.opened], ["Resolved", COLORS.resolved]].forEach(([label, color], i) => {
+    [[t("legend.opened"), COLORS.opened], [t("legend.resolved"), COLORS.resolved]].forEach(([label, color], i) => {
       const g = legend.append("g").attr("transform", `translate(${i * 96},0)`);
       g.append("rect").attr("width", 14).attr("height", 4).attr("y", -3).attr("fill", color).attr("rx", 2);
       g.append("text").attr("x", 20).text(label);
     });
-  })();
+  }
 
   // ---------- Donut charts ----------
   function renderDonut(el, rows, labelFn, heading) {
@@ -154,9 +173,8 @@
       .attr("font-size", "26px").attr("font-weight", 700).attr("fill", "#0f172a")
       .text(fmtInt(total));
     g.append("text").attr("text-anchor", "middle").attr("dy", "1.3em")
-      .attr("font-size", "12px").attr("fill", "#64748b").text("tickets");
+      .attr("font-size", "12px").attr("fill", "#64748b").text(t("tooltip.tickets"));
 
-    // Legend
     const legend = svg.append("g").attr("class", "legend")
       .attr("transform", `translate(${W - 240}, ${H / 2 - rows.length * 11})`);
     rows.forEach((d, i) => {
@@ -167,15 +185,12 @@
     });
   }
 
-  renderDonut("#chart-priority", data.priority, (d) => d.priority, "Priority mix");
-  renderDonut("#chart-category", data.category, (d) => d.category, "Ticket type");
-
   // ---------- Vertical bar chart (CI category) ----------
-  (function renderCiCat() {
+  function renderCiCat() {
     const el = "#chart-ci-cat";
     const W = 720, H = 330, m = { top: 16, right: 16, bottom: 66, left: 52 };
     const svg = d3.select(el).append("svg")
-      .attr("viewBox", `0 0 ${W} ${H}`).attr("role", "img").attr("aria-label", "Incidents by CI category");
+      .attr("viewBox", `0 0 ${W} ${H}`).attr("role", "img").attr("aria-label", t("charts.ci_cat.title"));
     const rows = data.ci_cat;
 
     const x = d3.scaleBand().domain(rows.map((d) => d.ci_cat)).range([m.left, W - m.right]).padding(0.25);
@@ -191,9 +206,10 @@
       .attr("x", (d) => x(d.ci_cat)).attr("width", x.bandwidth())
       .attr("y", (d) => y(d.count)).attr("height", (d) => y(0) - y(d.count))
       .attr("fill", COLORS.bar).attr("rx", 4)
-      .on("mousemove", (event, d) => showTooltip(event, `<strong>${d.ci_cat}</strong><br>${fmtInt(d.count)} tickets`))
+      .on("mousemove", (event, d) => showTooltip(event,
+        `<strong>${d.ci_cat}</strong><br>${fmtInt(d.count)} ${t("tooltip.tickets")}`))
       .on("mouseleave", hideTooltip);
-  })();
+  }
 
   // ---------- Horizontal bar chart (shared) ----------
   function renderHBar(el, rows, labelKey, heading) {
@@ -213,7 +229,8 @@
       .attr("y", (d) => y(d[labelKey])).attr("height", y.bandwidth())
       .attr("x", m.left).attr("width", (d) => x(d.count) - m.left)
       .attr("fill", COLORS.bar).attr("rx", 4)
-      .on("mousemove", (event, d) => showTooltip(event, `<strong>${d[labelKey]}</strong><br>${fmtInt(d.count)} tickets`))
+      .on("mousemove", (event, d) => showTooltip(event,
+        `<strong>${d[labelKey]}</strong><br>${fmtInt(d.count)} ${t("tooltip.tickets")}`))
       .on("mouseleave", hideTooltip);
 
     svg.selectAll("text.value").data(rows).join("text").attr("class", "value")
@@ -221,15 +238,12 @@
       .attr("font-size", 11).attr("fill", "#64748b").text((d) => fmtInt(d.count));
   }
 
-  renderHBar("#chart-ci-subcat", data.ci_subcat, "ci_subcat", "Top CI subcategories");
-  renderHBar("#chart-closure", data.closure, "closure_code", "Closure codes");
-
   // ---------- Grouped bars: resolution time by priority ----------
-  (function renderResolution() {
+  function renderResolution() {
     const el = "#chart-resolution";
     const W = 1080, H = 340, m = { top: 16, right: 30, bottom: 46, left: 52 };
     const svg = d3.select(el).append("svg")
-      .attr("viewBox", `0 0 ${W} ${H}`).attr("role", "img").attr("aria-label", "Resolution time by priority");
+      .attr("viewBox", `0 0 ${W} ${H}`).attr("role", "img").attr("aria-label", t("charts.resolution.title"));
     const rows = data.resolution_by_priority;
 
     const x0 = d3.scaleBand().domain(rows.map((d) => d.Priority_Label)).range([m.left, W - m.right]).padding(0.25);
@@ -243,63 +257,59 @@
     svg.append("g").attr("class", "axis").attr("transform", `translate(0,${H - m.bottom})`)
       .call(d3.axisBottom(x0).tickSize(0));
     svg.append("g").attr("class", "axis").attr("transform", `translate(${m.left},0)`)
-      .call(d3.axisLeft(y).ticks(5).tickFormat((d) => d + " d"));
+      .call(d3.axisLeft(y).ticks(5).tickFormat((d) => d + " " + t("axis.days")));
 
     const groups = svg.selectAll("g.group").data(rows).join("g").attr("class", "group")
       .attr("transform", (d) => `translate(${x0(d.Priority_Label)},0)`);
 
-    [["median", "Median", COLORS.median], ["p90", "P90", COLORS.p90]].forEach(([key, name, color]) => {
+    [["median", t("legend.median"), COLORS.median], ["p90", t("legend.p90"), COLORS.p90]].forEach(([key, name, color]) => {
       groups.append("rect")
         .attr("x", x1(key)).attr("width", x1.bandwidth())
         .attr("y", (d) => y(d[key])).attr("height", (d) => y(0) - y(d[key]))
         .attr("fill", color).attr("rx", 4)
         .on("mousemove", (event, d) => showTooltip(event,
-          `<strong>${d.Priority_Label}</strong> · ${name}<br>${fmt1(d[key])} days (n=${fmtInt(d.n)})`))
+          `<strong>${d.Priority_Label}</strong> · ${name}<br>${fmt1(d[key])} ${t("tooltip.days")} (n=${fmtInt(d.n)})`))
         .on("mouseleave", hideTooltip);
     });
 
     const legend = svg.append("g").attr("class", "legend")
       .attr("transform", `translate(${W - m.right - 210}, ${m.top})`);
-    [["Median", COLORS.median], ["90th percentile", COLORS.p90]].forEach(([label, color], i) => {
+    [[t("legend.median"), COLORS.median], [t("legend.p90"), COLORS.p90]].forEach(([label, color], i) => {
       const g = legend.append("g").attr("transform", `translate(${i * 118},0)`);
       g.append("rect").attr("width", 14).attr("height", 10).attr("y", -8).attr("fill", color).attr("rx", 2);
       g.append("text").attr("x", 20).text(label);
     });
-  })();
+  }
 
   // ---------- ITIL metric cards ----------
-  (function renderItilCards() {
+  function renderItilCards() {
     const it = data.itil;
     const cards = [
-      { label: "MTTR · mean time to resolve", value: fmt1(it.mttr_hours_avg) + " h",
-        note: "median " + fmt1(it.mttr_hours_median) + " h" },
-      { label: "MTBF · mean time between failures", value: fmt1(it.mtbf_days_avg) + " d",
-        note: "avg gap on " + fmtInt(it.mtbf_ci_count) + " repeat-incident CIs" },
-      { label: "First contact resolution", value: fmt1(it.fcr_pct) + "%",
-        note: "of resolved tickets, never reassigned" },
-      { label: "Escalation rate", value: fmt1(it.escalation_pct) + "%",
-        note: "of resolved tickets, reassigned 2+ times" },
-      { label: "SLA compliance", value: fmt1(it.sla_compliance_pct) + "%",
-        note: "resolved within priority target", cls: "good" },
-      { label: "Reopen rate", value: fmt1(it.reopen_rate_pct) + "%",
-        note: "reopened after being resolved" },
-      { label: "Major incidents (P1 + P2)", value: fmtInt(it.major_incidents.count),
-        note: fmt1(it.major_incidents.pct) + "% of ticket volume" },
-      { label: "Open backlog", value: fmtInt(it.backlog_open),
-        note: "tickets still work in progress" },
+      { label: t("itil.mttr.label"), value: fmt1(it.mttr_hours_avg) + " h",
+        note: t("itil.mttr.note").replace("{x}", fmt1(it.mttr_hours_median)) },
+      { label: t("itil.mtbf.label"), value: fmt1(it.mtbf_days_avg) + " d",
+        note: t("itil.mtbf.note").replace("{x}", fmtInt(it.mtbf_ci_count)) },
+      { label: t("itil.fcr.label"), value: fmt1(it.fcr_pct) + "%", note: t("itil.fcr.note") },
+      { label: t("itil.escalation.label"), value: fmt1(it.escalation_pct) + "%", note: t("itil.escalation.note") },
+      { label: t("itil.sla.label"), value: fmt1(it.sla_compliance_pct) + "%",
+        note: t("itil.sla.note"), cls: "good" },
+      { label: t("itil.reopen.label"), value: fmt1(it.reopen_rate_pct) + "%", note: t("itil.reopen.note") },
+      { label: t("itil.major.label"), value: fmtInt(it.major_incidents.count),
+        note: t("itil.major.note").replace("{x}", fmt1(it.major_incidents.pct)) },
+      { label: t("itil.backlog.label"), value: fmtInt(it.backlog_open), note: t("itil.backlog.note") },
     ];
     d3.select("#itil-cards").selectAll(".kpi").data(cards).join("div").attr("class", "kpi").html((d) =>
       `<div class="label">${d.label}</div>
        <div class="value ${d.cls || ""}">${d.value}</div>
        <div class="note">${d.note}</div>`);
-  })();
+  }
 
   // ---------- MTTR trend ----------
-  (function renderMttrTrend() {
+  function renderMttrTrend() {
     const el = "#chart-mttr-trend";
     const W = 1080, H = 300, m = { top: 16, right: 30, bottom: 40, left: 52 };
     const svg = d3.select(el).append("svg")
-      .attr("viewBox", `0 0 ${W} ${H}`).attr("role", "img").attr("aria-label", "MTTR trend by month");
+      .attr("viewBox", `0 0 ${W} ${H}`).attr("role", "img").attr("aria-label", t("charts.mttr.title"));
     const rows = data.itil.monthly_mttr;
 
     const x = d3.scalePoint().domain(rows.map((d) => d.month)).range([m.left, W - m.right]).padding(0.4);
@@ -315,7 +325,7 @@
     svg.append("g").attr("class", "axis").attr("transform", `translate(0,${H - m.bottom})`)
       .call(d3.axisBottom(x));
     svg.append("g").attr("class", "axis").attr("transform", `translate(${m.left},0)`)
-      .call(d3.axisLeft(y).ticks(5).tickFormat((d) => d + " d"));
+      .call(d3.axisLeft(y).ticks(5).tickFormat((d) => d + " " + t("axis.days")));
 
     const line = (key) => d3.line().x((d) => x(d.month)).y((d) => y(d[key])).curve(d3.curveMonotoneX);
     svg.append("path").datum(rows).attr("d", line("median")).attr("fill", "none")
@@ -327,17 +337,53 @@
       .attr("cx", (d) => x(d.month)).attr("cy", (d) => y(d.median_days))
       .attr("r", 4).attr("fill", COLORS.median)
       .on("mousemove", (event, d) => showTooltip(event,
-        `<strong>${d.month}</strong><br>Median: ${fmt1(d.median_days)} d<br>Mean: ${fmt1(d.mean_days)} d<br>Resolved: ${fmtInt(d.resolved)}`))
+        `<strong>${d.month}</strong><br>${t("tooltip.median")} ${fmt1(d.median_days)} ${t("axis.days")}<br>` +
+        `${t("tooltip.mean")} ${fmt1(d.mean_days)} ${t("axis.days")}<br>${t("tooltip.resolved")} ${fmtInt(d.resolved)}`))
       .on("mouseleave", hideTooltip);
 
     const legend = svg.append("g").attr("class", "legend")
       .attr("transform", `translate(${W - m.right - 200}, ${m.top})`);
-    [["Median", COLORS.median, null], ["Mean", COLORS.p90, "6 4"]].forEach(([label, color, dash], i) => {
+    [[t("legend.median"), COLORS.median, null], [t("legend.mean"), COLORS.p90, "6 4"]].forEach(([label, color, dash], i) => {
       const g = legend.append("g").attr("transform", `translate(${i * 88},0)`);
       g.append("line").attr("x1", 0).attr("x2", 16).attr("stroke", color)
         .attr("stroke-width", 2.5).attr("stroke-dasharray", dash || "none");
       g.append("text").attr("x", 22).text(label);
     });
-  })();
+  }
 
+  // ---------- Render orchestration ----------
+  const CHART_SLOTS = [
+    "#chart-monthly", "#chart-priority", "#chart-category", "#chart-ci-cat",
+    "#chart-ci-subcat", "#chart-closure", "#chart-resolution", "#chart-mttr-trend",
+  ];
+
+  function renderAll() {
+    applyStaticText();
+    renderGenerated();
+    d3.select("#kpis").selectAll("*").remove();
+    d3.select("#itil-cards").selectAll("*").remove();
+    CHART_SLOTS.forEach((id) => d3.select(id).selectAll("*").remove());
+    hideTooltip();
+    renderKpis();
+    renderItilCards();
+    renderMonthly();
+    renderDonut("#chart-priority", data.priority, (d) => d.priority, t("charts.priority.title"));
+    renderDonut("#chart-category", data.category, (d) => d.category, t("charts.category.title"));
+    renderCiCat();
+    renderHBar("#chart-ci-subcat", data.ci_subcat, "ci_subcat", t("charts.subcat.title"));
+    renderHBar("#chart-closure", data.closure, "closure_code", t("charts.closure.title"));
+    renderResolution();
+    renderMttrTrend();
+  }
+
+  document.querySelectorAll("#lang-switch button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (btn.dataset.lang === state.lang) return;
+      state.lang = btn.dataset.lang;
+      localStorage.setItem(LS_KEY, state.lang);
+      renderAll();
+    });
+  });
+
+  renderAll();
 })();
