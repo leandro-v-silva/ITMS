@@ -26,12 +26,25 @@
   <!-- KPI strip -->
   <section class="kpis" id="kpis"></section>
 
+  <!-- ITIL service-operation metrics -->
+  <section class="card span-12">
+    <h3>ITIL service-operation metrics</h3>
+    <p class="description">Standard ITIL measures computed from the incident lifecycle — metric definitions in the methodology notes below</p>
+    <div class="itil-grid" id="itil-cards"></div>
+  </section>
+
   <!-- Charts -->
   <section class="grid">
     <div class="card span-12">
       <h3>Ticket volume over time</h3>
       <p class="description">Tickets opened vs resolved per month</p>
       <div id="chart-monthly"></div>
+    </div>
+
+    <div class="card span-12">
+      <h3>MTTR trend — mean time to resolve</h3>
+      <p class="description">Median vs mean resolution days per month (resolved tickets)</p>
+      <div id="chart-mttr-trend"></div>
     </div>
 
     <div class="card">
@@ -75,6 +88,7 @@
     <strong>Methodology & data quality notes</strong>
     <ul>
       <li>ETL in Python/pandas: two day-first date formats normalised (<code>D/M/YYYY</code> and <code>DD-MM-YYYY</code>); durations recomputed from timestamps (the raw <code>Handle_Time_hrs</code> column is unreliable).</li>
+      <li><strong>ITIL measures:</strong> MTTR = mean hours Open→Resolved; MTBF = mean days between consecutive incidents on the same CI (biased by the volume ramp in this extract); First Contact Resolution = % of resolved tickets never reassigned (proxy); Escalation rate = % reassigned 2+ times; SLA compliance uses the targets below; Major incidents = P1+P2.</li>
       <li>SLA targets are a documented assumption: P1 ≤ 1d, P2 ≤ 3d, P3 ≤ 7d, P4/P5 ≤ 14d.</li>
       <li>Resolution timestamps only exist from Oct 2013 onward, so earlier months show zero resolutions — an artifact of the source extract, not of the pipeline.</li>
       <li>Pipeline & CI/CD: <code>etl/</code> → GitHub Actions → this report (D3.js) on GitHub Pages.</li>

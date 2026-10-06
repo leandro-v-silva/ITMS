@@ -35,7 +35,7 @@
   // ---------- Load all datasets ----------
   let data;
   try {
-    const names = ["kpi", "monthly", "priority", "category", "ci_cat", "ci_subcat", "closure", "resolution_by_priority", "meta"];
+    const names = ["kpi", "monthly", "priority", "category", "ci_cat", "ci_subcat", "closure", "resolution_by_priority", "itil", "meta"];
     const files = await Promise.all(names.map((n) => d3.json(`data/${n}.json`)));
     data = Object.fromEntries(names.map((n, i) => [n, files[i]]));
   } catch (err) { showError(err); return; }
@@ -264,6 +264,79 @@
       const g = legend.append("g").attr("transform", `translate(${i * 118},0)`);
       g.append("rect").attr("width", 14).attr("height", 10).attr("y", -8).attr("fill", color).attr("rx", 2);
       g.append("text").attr("x", 20).text(label);
+    });
+  })();
+
+  // ---------- ITIL metric cards ----------
+  (function renderItilCards() {
+    const it = data.itil;
+    const cards = [
+      { label: "MTTR · mean time to resolve", value: fmt1(it.mttr_hours_avg) + " h",
+        note: "median " + fmt1(it.mttr_hours_median) + " h" },
+      { label: "MTBF · mean time between failures", value: fmt1(it.mtbf_days_avg) + " d",
+        note: "avg gap on " + fmtInt(it.mtbf_ci_count) + " repeat-incident CIs" },
+      { label: "First contact resolution", value: fmt1(it.fcr_pct) + "%",
+        note: "of resolved tickets, never reassigned" },
+      { label: "Escalation rate", value: fmt1(it.escalation_pct) + "%",
+        note: "of resolved tickets, reassigned 2+ times" },
+      { label: "SLA compliance", value: fmt1(it.sla_compliance_pct) + "%",
+        note: "resolved within priority target", cls: "good" },
+      { label: "Reopen rate", value: fmt1(it.reopen_rate_pct) + "%",
+        note: "reopened after being resolved" },
+      { label: "Major incidents (P1 + P2)", value: fmtInt(it.major_incidents.count),
+        note: fmt1(it.major_incidents.pct) + "% of ticket volume" },
+      { label: "Open backlog", value: fmtInt(it.backlog_open),
+        note: "tickets still work in progress" },
+    ];
+    d3.select("#itil-cards").selectAll(".kpi").data(cards).join("div").attr("class", "kpi").html((d) =>
+      `<div class="label">${d.label}</div>
+       <div class="value ${d.cls || ""}">${d.value}</div>
+       <div class="note">${d.note}</div>`);
+  })();
+
+  // ---------- MTTR trend ----------
+  (function renderMttrTrend() {
+    const el = "#chart-mttr-trend";
+    const W = 1080, H = 300, m = { top: 16, right: 30, bottom: 40, left: 52 };
+    const svg = d3.select(el).append("svg")
+      .attr("viewBox", `0 0 ${W} ${H}`).attr("role", "img").attr("aria-label", "MTTR trend by month");
+    const rows = data.itil.monthly_mttr;
+
+    const x = d3.scalePoint().domain(rows.map((d) => d.month)).range([m.left, W - m.right]).padding(0.4);
+    const y = d3.scaleLinear()
+      .domain([0, d3.max(rows, (d) => Math.max(d.median_days, d.mean_days)) * 1.15])
+      .nice().range([H - m.bottom, m.top]);
+
+    svg.append("g").attr("class", "grid-lines")
+      .selectAll("line").data(y.ticks(5)).join("line")
+      .attr("x1", m.left).attr("x2", W - m.right)
+      .attr("y1", (d) => y(d)).attr("y2", (d) => y(d));
+
+    svg.append("g").attr("class", "axis").attr("transform", `translate(0,${H - m.bottom})`)
+      .call(d3.axisBottom(x));
+    svg.append("g").attr("class", "axis").attr("transform", `translate(${m.left},0)`)
+      .call(d3.axisLeft(y).ticks(5).tickFormat((d) => d + " d"));
+
+    const line = (key) => d3.line().x((d) => x(d.month)).y((d) => y(d[key])).curve(d3.curveMonotoneX);
+    svg.append("path").datum(rows).attr("d", line("median")).attr("fill", "none")
+      .attr("stroke", COLORS.median).attr("stroke-width", 2.5);
+    svg.append("path").datum(rows).attr("d", line("mean_days")).attr("fill", "none")
+      .attr("stroke", COLORS.p90).attr("stroke-width", 2).attr("stroke-dasharray", "6 4");
+
+    svg.selectAll("circle.median").data(rows).join("circle").attr("class", "median")
+      .attr("cx", (d) => x(d.month)).attr("cy", (d) => y(d.median_days))
+      .attr("r", 4).attr("fill", COLORS.median)
+      .on("mousemove", (event, d) => showTooltip(event,
+        `<strong>${d.month}</strong><br>Median: ${fmt1(d.median_days)} d<br>Mean: ${fmt1(d.mean_days)} d<br>Resolved: ${fmtInt(d.resolved)}`))
+      .on("mouseleave", hideTooltip);
+
+    const legend = svg.append("g").attr("class", "legend")
+      .attr("transform", `translate(${W - m.right - 200}, ${m.top})`);
+    [["Median", COLORS.median, null], ["Mean", COLORS.p90, "6 4"]].forEach(([label, color, dash], i) => {
+      const g = legend.append("g").attr("transform", `translate(${i * 88},0)`);
+      g.append("line").attr("x1", 0).attr("x2", 16).attr("stroke", color)
+        .attr("stroke-width", 2.5).attr("stroke-dasharray", dash || "none");
+      g.append("text").attr("x", 22).text(label);
     });
   })();
 

@@ -57,6 +57,16 @@ header.report-header .subtitle a:hover { text-decoration: underline; }
 .kpi .value.good { color: var(--good); }
 .kpi .value.warn { color: var(--warn); }
 
+/* ===== ITIL metric cards ===== */
+.itil-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+.itil-grid .kpi { border-left: 3px solid var(--accent); box-shadow: none; }
+.itil-grid .kpi .label { text-transform: none; letter-spacing: 0; font-size: .82rem; }
+
 /* ===== Chart grid ===== */
 .grid {
   display: grid;

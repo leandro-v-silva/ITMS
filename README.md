@@ -62,6 +62,11 @@ fresh copy from Kaggle, add `KAGGLE_USERNAME` and `KAGGLE_KEY` as repository sec
 - Priority/Impact/Urgency run **1–5** (5 = very low); `NS` impact marks unknown priority.
 - `Handle_Time_hrs` uses an unreliable digit-grouping format, so resolution time is
   **recomputed** from `Open_Time` / `Resolved_Time`.
+- **ITIL measures** (`report/data/itil.json`): MTTR (mean hours Open→Resolved),
+  MTBF (mean days between incidents on the same CI), First Contact Resolution
+  (% of resolved tickets never reassigned — proxy), escalation rate (% reassigned 2+),
+  SLA compliance, reopen rate, major-incident (P1+P2) count and open backlog.
+  MTBF is biased by the volume ramp in this extract — treat as indicative.
 - **SLA targets are an assumption**, documented here and in the report: P1 ≤ 1d, P2 ≤ 3d,
   P3 ≤ 7d, P4/P5 ≤ 14d.
 - The source extract only has resolution timestamps from Oct 2013 onward — earlier months

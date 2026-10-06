@@ -8,18 +8,27 @@ OUTPUT_DIR = REPO_ROOT / "report" / "data"
 DATASET_URL = "https://www.kaggle.com/datasets/ahanwadi/itsm-data"
 
 
+def _jsonable(payload):
+    """Recursively convert DataFrames (also nested inside dicts/lists) to records."""
+    if hasattr(payload, "to_dict"):  # DataFrame
+        return payload.to_dict(orient="records")
+    if isinstance(payload, dict):
+        return {key: _jsonable(value) for key, value in payload.items()}
+    if isinstance(payload, list):
+        return [_jsonable(value) for value in payload]
+    return payload
+
+
 def _write_json(name: str, payload) -> Path:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     path = OUTPUT_DIR / f"{name}.json"
-    path.write_text(json.dumps(payload, indent=2, default=str) + "\n", encoding="utf-8")
+    path.write_text(json.dumps(_jsonable(payload), indent=2, default=str) + "\n", encoding="utf-8")
     return path
 
 
 def load(aggregates: dict, total_rows: int) -> list[Path]:
     written = []
     for name, payload in aggregates.items():
-        if hasattr(payload, "to_dict"):  # DataFrame -> records
-            payload = payload.to_dict(orient="records")
         written.append(_write_json(name, payload))
 
     meta = {

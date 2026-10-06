@@ -125,6 +125,8 @@ def build_aggregates(df: pd.DataFrame) -> dict:
     ).fillna(99)
     res_by_pri = res_by_pri.sort_values("order").drop(columns="order")
 
+    itil = build_itil_metrics(df, resolved)
+
     return {
         "kpi": kpi,
         "monthly": monthly,
@@ -134,7 +136,73 @@ def build_aggregates(df: pd.DataFrame) -> dict:
         "ci_subcat": ci_subcat,
         "closure": closure,
         "resolution_by_priority": res_by_pri,
+        "itil": itil,
         "status": status,
+    }
+
+
+def build_itil_metrics(df: pd.DataFrame, resolved: pd.DataFrame) -> dict:
+    """Standard ITIL service-operation measures computed from the extract.
+
+    Definitions/proxies (documented in the report footer):
+    - MTTR: mean/median hours Open_Time -> Resolved_Time (resolved tickets).
+    - MTBF: mean days between consecutive incidents on the same CI
+      (CIs with >= 2 incidents within this extract; biased by the volume
+      ramp in the source data).
+    - FCR (first contact resolution): % of resolved tickets never reassigned.
+    - Escalation rate: % of tickets reassigned 2+ times.
+    """
+    mttr_hours = resolved["Resolution_Days"] * 24
+
+    mttr_by_priority = (
+        resolved.groupby("Priority_Label", observed=True)["Resolution_Days"]
+        .agg(mean_days="mean", median_days="median", n="count")
+        .round(2)
+        .reset_index()
+    )
+    mttr_by_priority["order"] = mttr_by_priority["Priority_Label"].map(
+        {v: k for k, v in PRIORITY_LABELS.items()}
+    ).fillna(99)
+    mttr_by_priority = mttr_by_priority.sort_values("order").drop(columns="order")
+
+    # MTBF: gaps between consecutive incidents per CI
+    ci_gaps = []
+    for _, group in df.dropna(subset=["Open_Time"]).groupby("CI_Name", observed=True):
+        times = group["Open_Time"].sort_values()
+        gaps = times.diff().dropna().dt.total_seconds() / 86400
+        ci_gaps.append(gaps)
+    all_gaps = pd.concat(ci_gaps) if ci_gaps else pd.Series(dtype=float)
+
+    reassign = resolved["No_of_Reassignments"].fillna(0)
+    fcr_base = int(reassign.notna().sum())
+    fcr_pct = round(float((reassign == 0).mean() * 100), 2) if fcr_base else None
+    escalation_pct = round(float((reassign >= 2).mean() * 100), 2) if fcr_base else None
+
+    major = df["Priority_Level"].isin([1, 2])
+    monthly_mttr = (
+        resolved.groupby("Resolved_Month", observed=True)["Resolution_Days"]
+        .agg(median_days="median", mean_days="mean", resolved="count")
+        .round(2)
+        .reset_index()
+        .rename(columns={"Resolved_Month": "month"})
+    )
+
+    return {
+        "mttr_hours_avg": round(float(mttr_hours.mean()), 1),
+        "mttr_hours_median": round(float(mttr_hours.median()), 1),
+        "mttr_by_priority": mttr_by_priority,
+        "mtbf_days_avg": round(float(all_gaps.mean()), 1) if len(all_gaps) else None,
+        "mtbf_ci_count": int((df.groupby("CI_Name", observed=True).size() >= 2).sum()),
+        "fcr_pct": fcr_pct,
+        "fcr_base": fcr_base,
+        "escalation_pct": escalation_pct,
+        "sla_compliance_pct": round(
+            float(resolved["Within_SLA"].astype("boolean").mean() * 100), 2
+        ),
+        "reopen_rate_pct": round(float(df["Was_Reopened"].mean() * 100), 2),
+        "backlog_open": int((df["Status"] != "Closed").sum()),
+        "major_incidents": {"count": int(major.sum()), "pct": round(float(major.mean() * 100), 2)},
+        "monthly_mttr": monthly_mttr,
     }
 
 
@@ -146,3 +214,8 @@ def validate(aggregates: dict) -> None:
     assert aggregates["priority"]["count"].sum() == kpi["total_incidents"], "priority totals mismatch"
     assert (aggregates["monthly"]["opened"] >= 0).all(), "negative monthly counts"
     assert kpi["median_resolution_days"] >= 0, "impossible median resolution"
+    itil = aggregates["itil"]
+    assert itil["mttr_hours_avg"] > 0, "impossible MTTR"
+    assert 0 <= itil["fcr_pct"] <= 100, "FCR out of range"
+    assert itil["fcr_base"] > 0, "empty FCR base"
+    assert itil["backlog_open"] == kpi["work_in_progress"], "backlog mismatch"

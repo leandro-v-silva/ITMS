@@ -1,0 +1,92 @@
+{
+  "mttr_hours_avg": 124.7,
+  "mttr_hours_median": 18.8,
+  "mttr_by_priority": [
+    {
+      "Priority_Label": "P1 \u00b7 Critical",
+      "mean_days": 3.42,
+      "median_days": 2.11,
+      "n": 3
+    },
+    {
+      "Priority_Label": "P2 \u00b7 High",
+      "mean_days": 0.83,
+      "median_days": 0.14,
+      "n": 413
+    },
+    {
+      "Priority_Label": "P3 \u00b7 Medium",
+      "mean_days": 3.88,
+      "median_days": 0.16,
+      "n": 4811
+    },
+    {
+      "Priority_Label": "P4 \u00b7 Low",
+      "mean_days": 5.29,
+      "median_days": 0.63,
+      "n": 22154
+    },
+    {
+      "Priority_Label": "P5 \u00b7 Very low",
+      "mean_days": 5.64,
+      "median_days": 1.23,
+      "n": 16201
+    },
+    {
+      "Priority_Label": "Unknown",
+      "mean_days": 4.19,
+      "median_days": 0.14,
+      "n": 1244
+    }
+  ],
+  "mtbf_days_avg": 2.2,
+  "mtbf_ci_count": 957,
+  "fcr_pct": 58.93,
+  "fcr_base": 44826,
+  "escalation_pct": 25.9,
+  "sla_compliance_pct": 91.87,
+  "reopen_rate_pct": 4.9,
+  "backlog_open": 9,
+  "major_incidents": {
+    "count": 700,
+    "pct": 1.5
+  },
+  "monthly_mttr": [
+    {
+      "month": "2013-10",
+      "median_days": 0.81,
+      "mean_days": 4.06,
+      "resolved": 8267
+    },
+    {
+      "month": "2013-11",
+      "median_days": 0.79,
+      "mean_days": 5.97,
+      "resolved": 7701
+    },
+    {
+      "month": "2013-12",
+      "median_days": 0.92,
+      "mean_days": 5.7,
+      "resolved": 6689
+    },
+    {
+      "month": "2014-01",
+      "median_days": 0.68,
+      "mean_days": 4.92,
+      "resolved": 7873
+    },
+    {
+      "month": "2014-02",
+      "median_days": 0.74,
+      "mean_days": 4.27,
+      "resolved": 7273
+    },
+    {
+      "month": "2014-03",
+      "median_days": 0.76,
+      "mean_days": 6.45,
+      "resolved": 7023
+    }
+  ]
+}
