@@ -1,0 +1,4 @@
+# Exclude generated/vendored files from GitHub language statistics
+data/raw/*.csv linguist-generated
+report/vendor/*.js linguist-vendored
+report/data/*.json linguist-generated

@@ -1,5 +1,11 @@
 name: BI pipeline & report deploy
 
+# Runs the ETL, validates its outputs and publishes the D3 report to GitHub Pages.
+#
+# Triggers:
+#   - push to main touching ETL / data / report / workflow files
+#   - manual run from the Actions tab ("Run workflow")
+#   - monthly schedule (keeps the site warm; only useful if data/pipeline change)
 on:
   push:
     branches: [main]
@@ -10,11 +16,12 @@ on:
       - ".github/workflows/**"
   workflow_dispatch:
   schedule:
-    - cron: "0 6 1 * *" # monthly refresh attempt
+    - cron: "0 6 1 * *" # 1st of the month, 06:00 UTC
 
 permissions:
   contents: read
 
+# One deployment at a time; a newer run cancels an in-flight older one.
 concurrency:
   group: pages
   cancel-in-progress: true
@@ -30,6 +37,7 @@ jobs:
         with:
           python-version: "3.13"
           cache: pip
+          cache-dependency-path: etl/requirements.txt
 
       - name: Install dependencies
         run: pip install -r etl/requirements.txt
@@ -40,14 +48,18 @@ jobs:
       - name: Validate report data
         run: |
           python - <<'PY'
-          import json, glob, sys
+          import glob
+          import json
+          import os
+
           files = sorted(glob.glob("report/data/*.json"))
-          assert len(files) >= 9, f"expected >=9 JSON files, found {len(files)}"
+          assert len(files) >= 10, f"expected >=10 JSON files, found {len(files)}"
           for f in files:
               with open(f) as fh:
                   payload = json.load(fh)
               assert payload not in (None, [], {}), f"{f} is empty"
-          print(f"JSON validation OK: {len(files)} files")
+          assert os.path.exists("report/index.html"), "report entry point missing"
+          print(f"Validation OK: {len(files)} data files + index.html present")
           PY
 
       - uses: actions/upload-pages-artifact@v3
@@ -59,8 +71,8 @@ jobs:
     needs: etl
     runs-on: ubuntu-latest
     permissions:
-      pages: write
-      id-token: write
+      pages: write # upload the deployment
+      id-token: write # OIDC token for Pages
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
